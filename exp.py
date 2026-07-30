@@ -54,11 +54,17 @@ def synth(task, n=2048):
 
 
 def load(task, p):
-    if p and os.path.exists(p):
+    k = {"iot": "mae", "txt": "f1", "fin": "auc"}[task]
+    if p:
+        if not os.path.exists(p):
+            raise FileNotFoundError(
+                "--data file not found: %s (refusing to fall back to "
+                "synthetic data)" % p)
         z = np.load(p)
-        k = {"iot": "mae", "txt": "f1", "fin": "auc"}[task]
-        return z["x"].astype("float32"), z["y"], k
-    return synth(task)
+        if "x" not in z or "y" not in z:
+            raise KeyError("%s must contain arrays 'x' and 'y'" % p)
+        return z["x"].astype("float32"), z["y"], k, True
+    return synth(task) + (False,)
 
 
 # ---------------------------------------------------------------- models
@@ -138,7 +144,20 @@ def main():
     ap.add_argument("--quick", action="store_true")
     v = ap.parse_args()
 
-    x, y, kind = load(v.task, v.data)
+    x, y, kind, real = load(v.task, v.data)
+    a1 = ASP(net("txt", (16, 16, 1), 2), 2)          # env probe
+    okp, okq = getattr(a1, "ok_p", False), getattr(a1, "ok_q", False)
+    print("env: TF %s | tfmot pruning: %s | tfmot int8: %s | sklearn: %s "
+          "| data: %s"
+          % (tf.__version__, okp, okq, OK_SK,
+             "REAL (%s)" % v.data if real else "SYNTHETIC"))
+    if not real:
+        print("*** SYNTHETIC smoke test: numbers verify the pipeline "
+              "only and MUST NOT be used in the paper. ***")
+    if not (okp and okq):
+        print("*** tfmot inactive (needs tensorflow<2.16 / Keras 2): "
+              "no pruning/quantization -> no memory or speed gain "
+              "is expected. ***")
     if v.quick:
         x, y = x[:512], y[:512]
 
@@ -158,6 +177,12 @@ def main():
           {"mae": "MAE", "f1": "F1-score", "auc": "AUC-ROC"}[kind]]
     if v.latex:
         print("\n%% rows for Table 1 (mean $\\pm$ std, n=%d):" % v.reps)
+        if not real:
+            print("%% !!! SYNTHETIC DATA - verification only, "
+                  "do NOT insert into the paper !!!")
+        if not (okp and okq):
+            print("%% !!! pruning/quantization were skipped in this "
+                  "run (tfmot inactive) !!!")
         ff = ["%.1f", "%.0f", "%.3f"]                # time, mem, quality
         for k in range(3):
             f = ff[k]

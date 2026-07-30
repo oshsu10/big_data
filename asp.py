@@ -65,26 +65,32 @@ class ASP:
 
     def _prune(self, m0):
         """Polynomial-decay magnitude pruning up to sparsity s."""
+        self.ok_p = False
         if not OK_SP:
             return m0
         try:
             pp = {"pruning_schedule": sp.PolynomialDecay(
                 initial_sparsity=0.0, final_sparsity=self.s,
                 begin_step=0, end_step=1000, frequency=100)}
-            return sp.prune_low_magnitude(m0, **pp)
+            m1 = sp.prune_low_magnitude(m0, **pp)
+            self.ok_p = True
+            return m1
         except Exception as e:
             print("prune skipped:", e)
             return m0
 
     def _quant(self, m):
         """Export an int8 TFLite graph for serving; keep float for adaptation."""
+        self.ok_q = False
         if self.qb != 8:
             return None
         try:
             mm = sp.strip_pruning(m) if OK_SP else m
             cv = tf.lite.TFLiteConverter.from_keras_model(mm)
             cv.optimizations = [tf.lite.Optimize.DEFAULT]
-            return cv.convert()
+            t = cv.convert()
+            self.ok_q = True
+            return t
         except Exception as e:
             print("quant skipped:", e)
             return None

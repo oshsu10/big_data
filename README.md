@@ -43,6 +43,20 @@ python exp.py --task fin --data fin.npz --reps 10 --latex
 The `--latex` flag prints rows ready for insertion into Table 1 of the
 manuscript (`mean $\pm$ std` over the given number of runs).
 
+Checklist for a run whose numbers may go into the paper:
+
+1. `python <= 3.11` and `pip install "tensorflow<2.16" tensorflow-model-optimization scikit-learn psutil`
+   (tfmot needs Keras 2; the env banner printed by `exp.py` must show
+   `tfmot pruning: True | tfmot int8: True | sklearn: True`);
+2. `--data` points at the real dataset (`data: REAL (...)` in the banner;
+   a missing file now raises an error instead of falling back);
+3. replace the demo networks in `net()` with the actual models of the
+   paper (compressed BERT for `txt`, CNN+GRU for `iot`, autoencoder for
+   `fin`) -- `exp.py` is a measurement harness, the demo nets only prove
+   that it runs;
+4. rows marked `SYNTHETIC DATA - verification only` must never be
+   inserted into the manuscript.
+
 Note: full pruning and int8 quantization require `tensorflow < 2.16`
 (Keras 2, as in the paper: TF 2.7); on Keras 3 these steps are skipped
 with a message while early exits and adaptation remain active.
@@ -50,3 +64,9 @@ with a message while early exits and adaptation remain active.
 Note: numbers produced on synthetic data are for pipeline verification
 only; the values reported in the paper are measured on the real
 datasets and hardware described in Sec. 3.
+
+---
+
+Примечание: `asp.py` - адаптивный потоковый процессор, `eem.py` - модель с
+ранними выходами, `bal.py` - RL-балансировщик, `kstream.py` - Kafka-слой,
+`exp.py` - прогон экспериментов с выводом mean +/- std для Таблицы 1.
