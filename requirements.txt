@@ -1,0 +1,10 @@
+# tfmot pruning/quantization requires Keras 2, i.e. tensorflow < 2.16;
+# on tensorflow >= 2.16 (Keras 3) ASP degrades gracefully: exits and
+# run-time adaptation stay active, pruning/quantization are skipped.
+tensorflow>=2.7,<2.16 ; python_version < "3.12"
+tensorflow>=2.16 ; python_version >= "3.12"
+tensorflow-model-optimization>=0.7
+numpy>=1.21
+psutil>=5.8
+scikit-learn>=1.0
+aiokafka>=0.8 ; extra == "kafka"
