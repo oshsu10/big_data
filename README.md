@@ -1,10 +1,9 @@
 # big_data
 
-Source code for the paper *"Development and optimization of deep learning
-algorithms for real-time big data stream processing using computational
-intelligence"* (submitted to Alexandria Engineering Journal).
+Source code for the paper *"Resource-aware adaptive optimization of deep learning
+models for real-time big data stream processing"* (submitted to Alexandria Engineering Journal).
 
-N.K. Arkabaev, Osh State University, Kyrgyz Republic.
+Nurkasym Arkabaev, Osh State University, Kyrgyz Republic.
 
 ## Contents
 
